@@ -2052,14 +2052,14 @@
         "assets/preview-widget.png"
       ],
       "manifest": "product-manifest.json",
-      "manifestSha256": "eb5c2c82f761562e48a0f015907ae1d6e648004e38e66ea6da8974ff155e5c37",
+      "manifestSha256": "cbdad21dc51c4cea5ff244304040cfb7100ef66d5509fb82ffaa7eb463c75bc3",
       "official": false,
       "tagline": "Explore live radio on a rotatable globe from the bar, and play stations through mpv with an MPRIS bridge.",
       "icon": "radio",
       "hosts": [
         "topbarGlyph"
       ],
-      "lastUpdated": "2026-10-22",
+      "lastUpdated": "2026-10-26",
       "upstream": "https://github.com/ryoku-dev/ryostore/tree/main/plugins/radio-atlas"
     }
   ]

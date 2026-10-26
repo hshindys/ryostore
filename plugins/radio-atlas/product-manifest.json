@@ -16,9 +16,9 @@
     {
       "source": "README.md",
       "destination": "README.md",
-      "sha256": "131609d5e0a51cc74792bb89e9d49b95dfb52c6f7bf07e8da271b566758b711c",
+      "sha256": "ce0c52f0b725efc79b90d1f67d898cd3fc2bdfd5bfd71039ec4984ed3b11dcd4",
       "mode": "0644",
-      "size": 2853,
+      "size": 3825,
       "install": false
     },
     {
@@ -56,9 +56,9 @@
     {
       "source": "bin/manifest.json",
       "destination": "bin/manifest.json",
-      "sha256": "146f9717773b9601531f1e0610321cf0f455d5b4f04854c0373b47575484fa88",
+      "sha256": "353c978ae9143484268f38de6bc8502e9a333a650677989a5d0d2cd455ad8da5",
       "mode": "0644",
-      "size": 817,
+      "size": 818,
       "install": true
     },
     {
@@ -88,9 +88,9 @@
     {
       "source": "bin/radio-player",
       "destination": "bin/radio-player",
-      "sha256": "a3cb76de4ea4568d449a1f04de3cd80e7d75157a1707de9f0754146932754d89",
+      "sha256": "03ee062314a0dc9a110aa0a17246ade1006ca70c8ab81cd7b9450d87bd1c7595",
       "mode": "0755",
-      "size": 23280,
+      "size": 23274,
       "install": true
     },
     {
@@ -120,9 +120,9 @@
     {
       "source": "bin/radio-state",
       "destination": "bin/radio-state",
-      "sha256": "4a6c73c98e3b124d128df1be40fc58f9763c4b41a729e95113e8d64c15a186b2",
+      "sha256": "89a111746c62113f75982e79d4134624847e52e1ecbb4f4fe586339af6e688d4",
       "mode": "0755",
-      "size": 6116,
+      "size": 6808,
       "install": true
     },
     {
@@ -142,11 +142,19 @@
       "install": true
     },
     {
+      "source": "content/HyprlandBridge.qml",
+      "destination": "content/HyprlandBridge.qml",
+      "sha256": "ec9de7e425159eca87f5aecaa12ad29bfb2099a0a6c9be81883bb718554335f0",
+      "mode": "0644",
+      "size": 600,
+      "install": true
+    },
+    {
       "source": "content/Panel.qml",
       "destination": "content/Panel.qml",
-      "sha256": "f63ba7e15aca06b629b27c1869b5150a669cb0fa34a30b7fbf2f539b2b8f261e",
+      "sha256": "cb475dc6158c3cc0f53af6490ceff7edc299aedda7591c1134f4054d9d6a509c",
       "mode": "0644",
-      "size": 96977,
+      "size": 98522,
       "install": true
     },
     {
@@ -232,9 +240,9 @@
     {
       "source": "lib/Style.qml",
       "destination": "lib/Style.qml",
-      "sha256": "f5255ed765221c2fa1b67638c1da6b96ebef706849defd4da2c78f8600490b58",
+      "sha256": "48ca4b080e4ac99c1159483b890704da44f4f15429866eb2bc93e86bc4a51ee3",
       "mode": "0644",
-      "size": 3717,
+      "size": 3751,
       "install": true
     },
     {
@@ -248,17 +256,17 @@
     {
       "source": "manifest.json",
       "destination": "manifest.json",
-      "sha256": "2f48dd0af3c3a83499244ab5cd1761f40e10986ec2ccf0edfc8f254cad0b1aef",
+      "sha256": "ec240f3bc89c351ad736ca8cc563f6afbb50267e6ce63d62eb4e36cac3859f59",
       "mode": "0644",
-      "size": 2650,
+      "size": 2667,
       "install": true
     },
     {
       "source": "service/Main.qml",
       "destination": "service/Main.qml",
-      "sha256": "5280d070641c792a95c08f3a1e4c0ce6172607dc203326f8d024330f7d01e069",
+      "sha256": "99bfb76dbc403d1d0521566b5efb1be996d78fab48ec299d7b8af2ab1d80ec82",
       "mode": "0644",
-      "size": 8025,
+      "size": 9523,
       "install": true
     }
   ]

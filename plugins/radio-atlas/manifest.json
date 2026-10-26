@@ -87,6 +87,7 @@
       "setpriv",
       "shuf",
       "socat",
+      "wl-copy",
       "bwrap",
       "file",
       "stat",

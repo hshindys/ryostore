@@ -4,8 +4,7 @@ umask 077
 
 : "${XDG_RUNTIME_DIR:?Radio Atlas requires XDG_RUNTIME_DIR}"
 runtime_dir="${RADIO_ATLAS_RUNTIME_DIR:-$XDG_RUNTIME_DIR/ryoku-radio-atlas}"
-data_root=${XDG_DATA_HOME:-$HOME/.local/share}
-state_dir="${RADIO_ATLAS_STATE_DIR:-$data_root/radio-atlas}"
+state_dir="${RADIO_ATLAS_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/ryoku/plugins/radio-atlas}"
 state_file="$state_dir/state.json"
 state_lock="$state_dir/state.lock"
 max_json_bytes=4194304
@@ -123,6 +122,23 @@ write_volume() {
   mv "$temporary" "$state_file"
 }
 
+# The benchmark-IP switch is a host setting, but the helpers read it from the
+# saved state, so the service pushes it through here (bin/radio-session).
+write_fake_ip() {
+  local allow=$1
+  [[ $allow == true || $allow == false ]] \
+    || { echo 'The benchmark IP setting must be true or false' >&2; exit 2; }
+  local temporary
+  temporary=$(mktemp "$state_dir/state.XXXXXX")
+  jq -c --argjson allow "$allow" '.allowFakeIp = $allow' "$state_file" > "$temporary"
+  if ! valid_state_file "$temporary"; then
+    rm -f "$temporary"
+    echo 'Radio Atlas could not save the benchmark IP setting safely' >&2
+    return 4
+  fi
+  mv "$temporary" "$state_file"
+}
+
 write_output() {
   local output=$1 LC_ALL=C
   [[ $output =~ ^[A-Za-z0-9._:+-]{0,160}$ ]] \
@@ -184,6 +200,9 @@ case "$action" in
     ;;
   volume)
     write_volume "${2:-}"
+    ;;
+  fakeip)
+    write_fake_ip "${2:-}"
     ;;
   output)
     write_output "${2:-}"

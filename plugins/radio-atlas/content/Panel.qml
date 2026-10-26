@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Io
 import Ryoku.PluginKit.Singletons
 import "../lib" as Atlas
@@ -11,6 +10,23 @@ import "../lib/RadioModel.js" as RadioModel
 
 Item {
   id: root
+
+  Component.onDestruction: root.stopPlayer()
+
+  property var hyprlandBridge: null
+  Loader {
+    id: hyprlandLoader
+    active: false
+    source: "HyprlandBridge.qml"
+    onLoaded: root.hyprlandBridge = item
+  }
+  Component.onCompleted: {
+    // Only load the Hyprland bridge when running under Hyprland.
+    try { hyprlandLoader.active = (Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") !== ""); }
+    catch (e) { hyprlandLoader.active = false; }
+    // The state dir itself is created by the helpers (bin/radio-state runs
+    // install -d), so the QML never spawns a process to make it.
+  }
 
   // Ryoku host properties. Omarchy's panel host supplied `panel`, `shell`,
   // `manifest` and a bare shell `Style`; Ryoku supplies pluginApi, density,
@@ -115,6 +131,12 @@ Item {
   // back to this file's own resolved directory.
   readonly property string pluginRoot: pluginApi && pluginApi.pluginDir
     ? String(pluginApi.pluginDir) : ""
+  // R8: the plugin's own state dir is the only place it may write, and the
+  // helpers read the same variable, so the service and bin/radio-state agree.
+  readonly property string stateDir: pluginApi && pluginApi.stateDir
+    ? String(pluginApi.stateDir)
+    : ((Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/ryoku/plugins/radio-atlas")
+  readonly property var stateEnv: ["RADIO_ATLAS_STATE_DIR=" + stateDir, "RADIO_ATLAS_RUNTIME_DIR=/run/user/" + Quickshell.env("UID")]
   readonly property string binDir: pluginRoot !== "" ? pluginRoot + "/bin" : ""
 
   // pluginApi.pluginDir can arrive empty on the first load; retry until the
@@ -172,7 +194,7 @@ Item {
   // Before mapping, panel.screen can still be Quickshell's default screen.
   readonly property var windowScreen: {
     if (panel.screen) return panel.screen
-    var monitor = Hyprland.focusedMonitor
+    var monitor = root.hyprlandBridge ? root.hyprlandBridge.focusedMonitor : null
     return monitor ? Quickshell.screens.find(function(screen) {
       return screen.name === monitor.name
     }) || null : null
@@ -180,7 +202,7 @@ Item {
   readonly property size preferredWindowSize: {
     var screen = windowScreen
     if (!screen) return Qt.size(Atlas.Style.space(1180), Atlas.Style.space(760))
-    var monitor = Hyprland.monitorFor(screen)
+    var monitor = root.hyprlandBridge ? root.hyprlandBridge.monitorFor(screen) : null
     var reserved = monitor && monitor.lastIpcObject.reserved || [0, 0, 0, 0]
     var widthMargin = Math.max(Atlas.Style.space(60), reserved[0] + reserved[2] + Atlas.Style.space(40))
     var heightMargin = Math.max(Atlas.Style.space(80), reserved[1] + reserved[3] + Atlas.Style.space(40))
@@ -267,7 +289,7 @@ Item {
 
   function open(payloadJson) {
     pendingOpenPayload = payloadJson || "{}"
-    Hyprland.refreshMonitors()
+    if (root.hyprlandBridge) root.hyprlandBridge.refreshMonitors()
     registerWindowSetup()
   }
 
@@ -1035,6 +1057,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: copyProcess
     onExited: function(exitCode) {
       if (exitCode !== 0) return
@@ -1053,6 +1076,7 @@ Item {
   //  Hyprland rules; a plugin may not write hyprctl eval window rules.)
 
   Process {
+    environment: root.stateEnv
     id: statusInitProcess
     command: []
     onExited: function(exitCode) {
@@ -1061,6 +1085,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: fetchProcess
     command: []
     stdout: StdioCollector {
@@ -1153,6 +1178,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: worldExpandProcess
     command: []
     stdout: StdioCollector {
@@ -1196,6 +1222,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: volumeProcess
     property int submittedVolume: -1
     property string output: ""
@@ -1233,6 +1260,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: outputsProcess
     property string output: ""
     property string errorOutput: ""
@@ -1277,6 +1305,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: outputProcess
     property string output: ""
     property string errorOutput: ""
@@ -1301,6 +1330,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: playerActionProcess
     property string action: ""
     property string output: ""
@@ -1329,6 +1359,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: stopProcess
     property string output: ""
     command: []
@@ -1362,6 +1393,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: stateProcess
     property string action: ""
     property string output: ""
@@ -1401,6 +1433,7 @@ Item {
   }
 
   Process {
+    environment: root.stateEnv
     id: historyProcess
     property string output: ""
     property string errorOutput: ""
@@ -1490,7 +1523,7 @@ Item {
   }
 
   Connections {
-    target: Hyprland
+    target: root.hyprlandBridge
     function onRawEvent(event) { root.handleHyprlandEvent(event) }
   }
 

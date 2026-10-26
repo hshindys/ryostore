@@ -34,11 +34,48 @@ Item {
     // R8: the plugin's own state dir is the only place it may write. The CLI
     // reads the same variable, so this service and bin/radio-state agree.
     readonly property string stateDir: pluginApi && pluginApi.stateDir
-        ? String(pluginApi.stateDir) : ""
+        ? String(pluginApi.stateDir)
+        : ((Quickshell.env("XDG_STATE_HOME") || (Quickshell.env("HOME") + "/.local/state")) + "/ryoku/plugins/radio-atlas")
+
+    // The helpers only learn these paths through the environment; without it
+    // bin/radio-state would quietly write to its own default folder instead of
+    // the plugin's state dir.
+    readonly property var stateEnv: [
+        "RADIO_ATLAS_STATE_DIR=" + stateDir,
+        "RADIO_ATLAS_RUNTIME_DIR=" + runtimeDir
+    ]
 
     readonly property bool allowFakeIp: {
         var s = svc.settings;
         return s ? s.allowFakeIp === true : false;
+    }
+
+    // The helpers read the benchmark-IP switch from the saved state
+    // (bin/radio-session -> radio-mpris), so the host setting has to be pushed
+    // into it: on start and whenever the user flips the toggle.
+    onAllowFakeIpChanged: svc.syncFakeIp()
+
+    property bool fakeIpDirty: false
+
+    function syncFakeIp() {
+        if (!svc.started) return;
+        // Another state write owns the process; retry when it is done rather
+        // than dropping the setting on the floor.
+        if (stateProc.running) { svc.fakeIpDirty = true; return; }
+        svc.fakeIpDirty = false;
+        svc.writeState([svc.bin("radio-state"), "fakeip", svc.allowFakeIp ? "true" : "false"]);
+    }
+
+    // One process for every saved-state write, so two writes cannot race.
+    function writeState(argv) {
+        if (stateProc.running) return;
+        stateProc.command = argv;
+        stateProc.running = true;
+    }
+
+    function readState() {
+        if (stateProc.running) return;
+        svc.writeState([svc.bin("radio-state"), "get"]);
     }
 
     // --- saved state -----------------------------------------------------
@@ -58,12 +95,6 @@ Item {
         + "/ryoku-radio-atlas"
 
     function bin(name) { return svc.binDir + "/" + name; }
-
-    function readState() {
-        if (stateProc.running) return;
-        stateProc.command = [svc.bin("radio-state"), "get"];
-        stateProc.running = true;
-    }
 
     function toggleFavorite(uuid) {
         if (stateProc.running) return;
@@ -132,6 +163,7 @@ Item {
     // --- processes -------------------------------------------------------
     Process {
         id: stateProc
+        environment: svc.stateEnv
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {
@@ -150,11 +182,13 @@ Item {
         }
         onExited: function(exitCode) {
             if (exitCode !== 0) svc.stateError = "Radio Atlas could not save state";
+            if (svc.fakeIpDirty) svc.syncFakeIp();
         }
     }
 
     Process {
         id: outputsProc
+        environment: svc.stateEnv
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {
@@ -175,6 +209,7 @@ Item {
 
     Process {
         id: fetchProc
+        environment: svc.stateEnv
         stdout: StdioCollector {
             waitForEnd: true
             onStreamFinished: {
@@ -217,6 +252,7 @@ Item {
         if (svc.started || svc.binDir === "") return;
         svc.started = true;
         svc.readState();
+        svc.syncFakeIp();
         svc.fetchWorld();
     }
 
